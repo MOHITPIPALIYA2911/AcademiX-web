@@ -1,28 +1,34 @@
 // import React, { useEffect, useState } from 'react';
-// import { Link } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
-// const GroupSection = ({ title, groups, emptyMsg, viewAllLink }) => {
+// const GroupSection = ({ title, groups, emptyMsg, viewAllLink, loading }) => {
+//   const navigate = useNavigate();
+
 //   return (
 //     <div className="mb-12">
 //       <div className="flex justify-between items-center mb-4">
 //         <h3 className="text-2xl font-semibold text-green-700">{title}</h3>
-//         {groups.length > 6 && (
-//           <Link
-//             to={viewAllLink}
-//             className="text-green-600 text-sm hover:underline hover:text-green-800 transition"
+//         {viewAllLink && groups.length > 6 && (
+//           <span
+//             onClick={() => navigate(viewAllLink)}
+//             className="text-green-600 text-sm hover:underline hover:text-green-800 transition cursor-pointer"
 //           >
 //             View All →
-//           </Link>
+//           </span>
 //         )}
 //       </div>
-//       {groups.length === 0 ? (
+
+//       {loading ? (
+//         <p className="text-gray-500 italic">Loading {title.toLowerCase()}...</p>
+//       ) : groups.length === 0 ? (
 //         <p className="text-gray-500 italic">{emptyMsg}</p>
 //       ) : (
 //         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 //           {groups.slice(0, 6).map((group, index) => (
 //             <div
 //               key={index}
-//               className="bg-gray-100 border-l-4 border-green-400 rounded-lg p-4 shadow hover:shadow-md transition-all duration-300"
+//               onClick={() => navigate(`/viewgroup/${group._id}`)}
+//               className="cursor-pointer bg-gray-100 border-l-4 border-green-400 rounded-lg p-4 shadow hover:shadow-md transition-all duration-300"
 //             >
 //               <h4 className="text-lg font-bold text-gray-800 flex items-center gap-2">
 //                 <span role="img" aria-label="group">👥</span>
@@ -41,13 +47,14 @@
 //   const [myGroups, setMyGroups] = useState([]);
 //   const [joinedGroups, setJoinedGroups] = useState([]);
 //   const [allGroups, setAllGroups] = useState([]);
+//   const [loading, setLoading] = useState(true);
 
 //   useEffect(() => {
 //     const fetchAll = async () => {
 //       const token = localStorage.getItem('token');
+//       const userId = localStorage.getItem('userId');
 
 //       try {
-//         // Replace <userid> with your actual user ID logic if needed
 //         const all = await fetch('http://localhost:7777/groups', {
 //           headers: { Authorization: `Bearer ${token}` },
 //         }).then((res) => res.json());
@@ -58,7 +65,7 @@
 //               headers: { Authorization: `Bearer ${token}` },
 //             });
 //             const data = await res.json();
-//             return data.createdBy === localStorage.getItem('userId') ? group : null;
+//             return data.createdBy === userId ? group : null;
 //           })
 //         );
 
@@ -68,7 +75,7 @@
 //               headers: { Authorization: `Bearer ${token}` },
 //             });
 //             const data = await res.json();
-//             const isMember = data.some((member) => member._id === localStorage.getItem('userId'));
+//             const isMember = data.some((member) => member._id === userId);
 //             return isMember ? group : null;
 //           })
 //         );
@@ -78,6 +85,8 @@
 //         setJoinedGroups(joined.filter(Boolean));
 //       } catch (error) {
 //         console.error('Error fetching groups:', error);
+//       } finally {
+//         setLoading(false);
 //       }
 //     };
 
@@ -93,6 +102,7 @@
 //         groups={myGroups}
 //         emptyMsg="You haven’t created any groups yet."
 //         viewAllLink="/mygroups"
+//         loading={loading}
 //       />
 
 //       <GroupSection
@@ -100,6 +110,7 @@
 //         groups={joinedGroups}
 //         emptyMsg="You haven’t joined any groups yet."
 //         viewAllLink="/joinedgroups"
+//         loading={loading}
 //       />
 
 //       <GroupSection
@@ -107,6 +118,7 @@
 //         groups={allGroups}
 //         emptyMsg="No groups available to join right now."
 //         viewAllLink="/allgroups"
+//         loading={loading}
 //       />
 //     </div>
 //   );
@@ -115,8 +127,9 @@
 // export default ViewGroups;
 
 
+
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const dummyGroups = [
   { _id: '1', groupName: 'Frontend Wizards', description: 'Discuss React, Vue, and frontend magic.' },
@@ -131,44 +144,53 @@ const dummyGroups = [
   { _id: '10', groupName: 'TechTalk Tribe', description: 'Chill and chat about tech.' },
 ];
 
-const GroupSection = ({ title, groups, emptyMsg, viewAllLink, limit }) => (
-  <div className="mb-12">
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-2xl font-semibold text-green-700">{title}</h3>
-      {viewAllLink && groups.length > limit && (
-        <Link
-          to={viewAllLink}
-          className="text-green-600 text-sm hover:underline hover:text-green-800 transition"
-        >
-          View All →
-        </Link>
+const GroupSection = ({ title, groups, emptyMsg, viewAllLink, limit, loading }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="mb-12">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-2xl font-semibold text-green-700">{title}</h3>
+        {viewAllLink && groups.length > limit && (
+          <span
+            onClick={() => navigate(viewAllLink)}
+            className="text-green-600 text-sm hover:underline hover:text-green-800 transition cursor-pointer"
+          >
+            View All →
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <p className="text-gray-500 italic">Loading {title.toLowerCase()}...</p>
+      ) : groups.length === 0 ? (
+        <p className="text-gray-500 italic">{emptyMsg}</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {(limit > 0 ? groups.slice(0, limit) : groups).map((group, index) => (
+            <div
+              key={index}
+              onClick={() => navigate(`/viewgroup/${group._id}`)}
+              className="cursor-pointer bg-gray-100 border-l-4 border-green-400 rounded-lg p-4 shadow hover:shadow-md transition-all duration-300"
+            >
+              <h4 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <span role="img" aria-label="group">👥</span>
+                {group.groupName}
+              </h4>
+              <p className="text-sm text-gray-600 mt-1">{group.description}</p>
+            </div>
+          ))}
+        </div>
       )}
     </div>
-    {groups.length === 0 ? (
-      <p className="text-gray-500 italic">{emptyMsg}</p>
-    ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {(limit ? groups.slice(0, limit) : groups).map((group, index) => (
-          <div
-            key={index}
-            className="bg-gray-100 border-l-4 border-green-400 rounded-lg p-4 shadow hover:shadow-md transition-all duration-300"
-          >
-            <h4 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <span role="img" aria-label="group">👥</span>
-              {group.groupName}
-            </h4>
-            <p className="text-sm text-gray-600 mt-1">{group.description}</p>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
+  );
+};
 
 const ViewGroups = () => {
   const [myGroups, setMyGroups] = useState([]);
   const [joinedGroups, setJoinedGroups] = useState([]);
   const [allGroups, setAllGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -181,7 +203,6 @@ const ViewGroups = () => {
         });
 
         if (!res.ok) throw new Error('Failed to fetch groups');
-
         const all = await res.json();
 
         const my = await Promise.all(
@@ -198,7 +219,6 @@ const ViewGroups = () => {
             const members = await fetch(`http://localhost:7777/groups/${group._id}/members`, {
               headers: { Authorization: `Bearer ${token}` },
             }).then((res) => res.json());
-
             const isMember = members.some((m) => m._id === userId);
             return isMember ? group : null;
           })
@@ -212,6 +232,8 @@ const ViewGroups = () => {
         setAllGroups(dummyGroups);
         setMyGroups(dummyGroups);
         setJoinedGroups(dummyGroups);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -228,6 +250,7 @@ const ViewGroups = () => {
         emptyMsg="You haven’t created any groups yet."
         viewAllLink="/mygroups"
         limit={4}
+        loading={loading}
       />
 
       <GroupSection
@@ -236,18 +259,19 @@ const ViewGroups = () => {
         emptyMsg="You haven’t joined any groups yet."
         viewAllLink="/joinedgroups"
         limit={4}
+        loading={loading}
       />
 
       <GroupSection
         title="All Groups"
         groups={allGroups}
         emptyMsg="No groups available to join right now."
-        viewAllLink={null} // disables "View All" link
-        limit={0} // show all
+        viewAllLink={null}
+        limit={0}
+        loading={loading}
       />
     </div>
   );
 };
 
 export default ViewGroups;
-

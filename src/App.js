@@ -14,12 +14,8 @@ import CreateGroup from './pages/managegroup/CreateGroup';
 import MyGroups from './pages/managegroup/MyGroups';
 import JoinedGroups from './pages/managegroup/JoinedGroup';
 import PublicDiscussion from './pages/publicdiscussion/PublicDiscussion';
-
-// New pages
-// import CreateGroup from './pages/groups/CreateGroup';
-// import PublicDiscussion from './pages/groups/PublicDiscussion';
-// import JoinGroup from './pages/groups/JoinGroup';
-// import ViewGroups from './pages/groups/ViewGroups';
+import ViewGroup from './pages/managegroup/ViewGroup';
+import Question from './components/group/Question';
 
 function App() {
   return (
@@ -48,7 +44,6 @@ function App() {
             </Layout>
           }
         />
-        {/* Public Discussion  */}
         <Route
           path="/publicdiscussion"
           element={
@@ -56,9 +51,7 @@ function App() {
               <Protected Cmp={PublicDiscussion} />
             </Layout>
           }
-        /> 
-
-        {/* manage group */}
+        />
         <Route
           path="/creategroup"
           element={
@@ -67,21 +60,19 @@ function App() {
             </Layout>
           }
         />
-        {/* <Route
-          path="/joingroup"
-          element={
-            <Layout>
-              <Protected Cmp={JoinGroup} />
-            </Layout>
-          }
-        />
-       */}
-
         <Route
           path="/viewgroups"
           element={
             <Layout>
               <Protected Cmp={ViewGroups} />
+            </Layout>
+          }
+        />
+        <Route
+          path="/viewgroup/:grpID"
+          element={
+            <Layout>
+              <Protected Cmp={ViewGroup} />
             </Layout>
           }
         />
@@ -101,6 +92,17 @@ function App() {
             </Layout>
           }
         />
+
+        {/* ✅ Question Route */}
+        <Route
+          path="/question/:qid/group/:grpID"
+          element={
+            <Layout>
+              <Protected Cmp={Question} />
+            </Layout>
+          }
+        />
+
       </Routes>
     </Router>
   );

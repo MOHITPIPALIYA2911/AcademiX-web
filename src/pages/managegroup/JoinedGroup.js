@@ -1,8 +1,10 @@
 // import React, { useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
 
 // const JoinedGroups = () => {
 //   const [joinedGroups, setJoinedGroups] = useState([]);
 //   const [loading, setLoading] = useState(true);
+//   const navigate = useNavigate();
 
 //   useEffect(() => {
 //     const fetchJoinedGroups = async () => {
@@ -61,7 +63,8 @@
 //           {joinedGroups.map((group) => (
 //             <div
 //               key={group._id}
-//               className="bg-gray-100 border-l-4 border-green-500 p-5 rounded-lg shadow hover:shadow-md transition"
+//               onClick={() => navigate(`/viewgroup/${group._id}`)}
+//               className="cursor-pointer bg-gray-100 border-l-4 border-green-500 p-5 rounded-lg shadow hover:shadow-md transition"
 //             >
 //               <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
 //                 <span role="img" aria-label="group">👥</span> {group.groupName}
@@ -78,6 +81,7 @@
 // export default JoinedGroups;
 
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Dummy groups as fallback
 const dummyJoinedGroups = [
@@ -97,6 +101,7 @@ const dummyJoinedGroups = [
 const JoinedGroups = () => {
   const [joinedGroups, setJoinedGroups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchJoinedGroups = async () => {
@@ -157,7 +162,8 @@ const JoinedGroups = () => {
           {joinedGroups.map((group) => (
             <div
               key={group._id}
-              className="bg-gray-100 border-l-4 border-green-500 p-5 rounded-lg shadow hover:shadow-md transition"
+              onClick={() => navigate(`/viewgroup/${group._id}`)}
+              className="cursor-pointer bg-gray-100 border-l-4 border-green-500 p-5 rounded-lg shadow hover:shadow-md transition"
             >
               <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                 <span role="img" aria-label="group">👥</span> {group.groupName}

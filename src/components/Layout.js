@@ -15,7 +15,7 @@ const Layout = ({ children }) => {
         <Header />
 
         {/* Content */}
-        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        <main className="flex-1  overflow-y-auto">{children}</main>
 
         {/* Footer */}
         <Footer />

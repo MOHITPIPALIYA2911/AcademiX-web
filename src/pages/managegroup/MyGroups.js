@@ -1,13 +1,15 @@
 // import React, { useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
 
 // const MyGroups = () => {
 //   const [myGroups, setMyGroups] = useState([]);
 //   const [loading, setLoading] = useState(true);
+//   const navigate = useNavigate();
 
 //   useEffect(() => {
 //     const fetchMyGroups = async () => {
 //       const token = localStorage.getItem("token");
-//       const userId = localStorage.getItem("userId"); // Make sure userId is stored after login
+//       const userId = localStorage.getItem("userId");
 
 //       try {
 //         const res = await fetch("http://localhost:7777/groups", {
@@ -17,7 +19,6 @@
 //         });
 
 //         const allGroups = await res.json();
-
 //         const filtered = allGroups.filter((group) => group.createdBy === userId);
 
 //         setMyGroups(filtered);
@@ -44,7 +45,8 @@
 //           {myGroups.map((group) => (
 //             <div
 //               key={group._id}
-//               className="bg-gray-100 border-l-4 border-green-500 p-5 rounded-lg shadow hover:shadow-md transition"
+//               onClick={() => navigate(`/viewgroup/${group._id}`)}
+//               className="bg-gray-100 border-l-4 border-green-500 p-5 rounded-lg shadow hover:shadow-md transition cursor-pointer"
 //             >
 //               <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
 //                 <span role="img" aria-label="group">👥</span> {group.groupName}
@@ -60,7 +62,9 @@
 
 // export default MyGroups;
 
+
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const dummyMyGroups = [
   { _id: "g1", groupName: "React Ninjas", description: "Mastering the React ecosystem." },
@@ -80,6 +84,7 @@ const dummyMyGroups = [
 const MyGroups = () => {
   const [myGroups, setMyGroups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMyGroups = async () => {
@@ -94,7 +99,6 @@ const MyGroups = () => {
         });
 
         const allGroups = await res.json();
-
         const filtered = allGroups.filter((group) => group.createdBy === userId);
 
         setMyGroups(filtered.length ? filtered : dummyMyGroups);
@@ -122,7 +126,8 @@ const MyGroups = () => {
           {myGroups.map((group) => (
             <div
               key={group._id}
-              className="bg-gray-100 border-l-4 border-green-500 p-5 rounded-lg shadow hover:shadow-md transition"
+              onClick={() => navigate(`/viewgroup/${group._id}`)}
+              className="cursor-pointer bg-gray-100 border-l-4 border-green-500 p-5 rounded-lg shadow hover:shadow-md transition"
             >
               <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                 <span role="img" aria-label="group">👥</span> {group.groupName}
@@ -137,3 +142,4 @@ const MyGroups = () => {
 };
 
 export default MyGroups;
+
