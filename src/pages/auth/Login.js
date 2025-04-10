@@ -4,17 +4,18 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import loginImg from '../../assets/bglogin.jpeg';
 import Logo from '../../assets/ClosedLogo5.jpg';
+import axios from 'axios';
 
 const Login = () => {
-  const [formData, setFormData] = useState({ emailId: '', password: '' });
+  const [formData, setFormData] = useState({ emailId: 'Clark@email.com', password: 'Clark@123' });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [navigate]);
+  // useEffect(() => {
+  //   const token = localStorage.getItem('token');
+  //   if (token) {
+  //     navigate('/dashboard', { replace: true });
+  //   }
+  // }, [navigate]);
 
   const isValidEmail = (email) => {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -44,17 +45,23 @@ const Login = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:7777/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emailId, password }),
-      });
+      
 
-      const data = await response.json();
+      const response = await axios.post(
+        'http://localhost:7777/auth/login', // adjust to your backend URL
+        formData,
+        {
+          withCredentials: true, // ensures cookies (if any) are included in the request/response
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      if (response.ok && data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('usertype', data.usertype);
+      if (response.status===200) {
+        // no need for this as for every req. sent ,thers user_auth to check the token present in the cookie
+        // localStorage.setItem('token', data.token);
+        // localStorage.setItem('usertype', data.usertype);
         toast.success('🎉 Login successful!');
         navigate('/dashboard', { replace: true });
       } else {
