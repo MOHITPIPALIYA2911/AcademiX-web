@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createSocketConnection } from "../../utils/socket";
 
 const GroupDiscussion = ({ groupId }) => {
   const [messages, setMessages] = useState([
@@ -31,6 +32,11 @@ const GroupDiscussion = ({ groupId }) => {
 
   const [msg, setMsg] = useState("");
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    const socket = createSocketConnection();
+    socket.emit("joinChat", () => {});
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef();
+  const navigate = useNavigate();
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
@@ -10,9 +12,8 @@ const Header = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("usertype");
     sessionStorage.clear();
-    window.location.href = "/login";
+    navigate("/login");
   };
-  
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -41,14 +42,19 @@ const Header = () => {
 
       {/* Right: User dropdown */}
       <div className="relative" ref={dropdownRef}>
-        <button onClick={toggleDropdown} className="focus:outline-none flex items-center space-x-2">
+        <button
+          onClick={toggleDropdown}
+          className="focus:outline-none flex items-center space-x-2"
+        >
           <img
             src="/assets/img/avatars/1.png"
             alt="User Avatar"
             className="w-10 h-10 rounded-full border"
             onError={(e) => (e.target.style.display = "none")} // fallback if image not found
           />
-          <span className="hidden md:inline text-gray-700 font-medium">John Doe</span>
+          <span className="hidden md:inline text-gray-700 font-medium">
+            John Doe
+          </span>
         </button>
 
         {dropdownOpen && (
@@ -56,7 +62,7 @@ const Header = () => {
             <div className="px-4 py-3 border-b">
               <p className="text-sm font-medium text-gray-800">John Doe</p>
               <p className="text-xs text-gray-500">Admin</p>
-            </div>  
+            </div>
             <ul className="py-2">
               <li>
                 <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">

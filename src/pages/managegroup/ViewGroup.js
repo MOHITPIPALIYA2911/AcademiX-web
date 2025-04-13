@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   mdiHomeOutline,
   mdiCommentQuestionOutline,
@@ -16,6 +16,8 @@ import Question from "../../components/group/Question";
 import GroupQA from "../../components/group/GroupQA";
 import GroupDiscussion from "../../components/group/GroupDiscussion";
 import GroupMembers from "../../components/group/GroupMembers";
+import axios from "axios";
+import { useSelector } from "react-redux";
 
 // import other components here later
 
@@ -28,20 +30,41 @@ const tabs = [
 ];
 
 const GroupLayout = () => {
-  const { id } = useParams();
+  const { groupId } = useParams();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [group, setGroup] = useState(null);
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
+  const user = useSelector((store) => store.user);
+
+  console.log(" groupId ", groupId);
 
   useEffect(() => {
     // TODO: Replace with real API call
-    setGroup({
-      name: "React Study Group",
-      description:
-        "This group is for React enthusiasts looking to build real-world projects together, contribute to open source, and explore new patterns and technologies. We welcome beginners and pros alike!",
-      inviteCode: "ABC123XYZ",
-    });
-  }, [id]);
+    //if(!user) navigate('/login')
+
+    const fetchGroup = async () => {
+      const group = await axios.get(`http://localhost:7777/groups/${groupId}`, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log(group.data);
+      const {
+        group_name: name,
+        description,
+        invitation_code: inviteCode,
+      } = group.data;
+      setGroup({
+        name,
+        description,
+        inviteCode,
+      });
+    };
+    console.log(groupId);
+    if (groupId?.length > 0) fetchGroup();
+  }, [groupId]);
 
   const copyInviteCode = () => {
     navigator.clipboard.writeText(group?.inviteCode);
@@ -54,11 +77,11 @@ const GroupLayout = () => {
       case "dashboard":
         return <GroupHome description={group?.description} />;
       case "qa":
-        return <GroupQA/>  ;
+        return <GroupQA />;
       case "discussion":
-        return <GroupDiscussion/>;
+        return <GroupDiscussion />;
       case "members":
-        return <GroupMembers/>;
+        return <GroupMembers />;
       case "manage":
         return <p>Manage members, permissions etc.</p>;
       default:
@@ -93,14 +116,23 @@ const GroupLayout = () => {
           <div className="mb-6 flex justify-between items-start flex-wrap gap-4">
             {/* Info */}
             <div className="flex-1">
-              <h2 className="text-3xl font-bold text-green-700">{group.name}</h2>
+              <h2 className="text-3xl font-bold text-green-700">
+                {group.name}
+              </h2>
               <div className="mt-2 flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-medium">Invitation Code:</span>
-                <code className="bg-gray-200 px-2 py-1 rounded text-sm font-mono">{group.inviteCode}</code>
-                <button onClick={copyInviteCode} className="text-green-600 hover:text-green-800">
+                <code className="bg-gray-200 px-2 py-1 rounded text-sm font-mono">
+                  {group.inviteCode}
+                </code>
+                <button
+                  onClick={copyInviteCode}
+                  className="text-green-600 hover:text-green-800"
+                >
                   <Icon path={mdiContentCopy} size={0.85} />
                 </button>
-                {copied && <span className="text-xs text-green-600">Copied!</span>}
+                {copied && (
+                  <span className="text-xs text-green-600">Copied!</span>
+                )}
               </div>
             </div>
 
@@ -118,7 +150,9 @@ const GroupLayout = () => {
           </div>
         )}
 
-        <div className="bg-white rounded shadow  min-h-[300px]">{renderTabContent()}</div>
+        <div className="bg-white rounded shadow  min-h-[300px]">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );
