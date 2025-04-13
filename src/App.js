@@ -1,26 +1,72 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import Dashboard from './pages/dashboard/Dashboard';
-import Layout from './components/Layout';
-import Protected from './pages/Protected';
-import Profile from './pages/manageprofile/Profile';
-import ViewGroups from './pages/managegroup/ViewGroups';
-import CreateGroup from './pages/managegroup/CreateGroup';
-import MyGroups from './pages/managegroup/MyGroups';
-import JoinedGroups from './pages/managegroup/JoinedGroup';
-import PublicDiscussion from './pages/publicdiscussion/PublicDiscussion';
-import ViewGroup from './pages/managegroup/ViewGroup';
-import Question from './components/group/Question';
+import React, { useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { addUser } from "./utils/userSlice";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Dashboard from "./pages/dashboard/Dashboard";
+import Layout from "./components/Layout";
+import Protected from "./pages/Protected";
+import Profile from "./pages/manageprofile/Profile";
+import ViewGroups from "./pages/managegroup/ViewGroups";
+import CreateGroup from "./pages/managegroup/CreateGroup";
+import MyGroups from "./pages/managegroup/MyGroups";
+import JoinedGroups from "./pages/managegroup/JoinedGroup";
+import PublicDiscussion from "./pages/publicdiscussion/PublicDiscussion";
+import ViewGroup from "./pages/managegroup/ViewGroup";
+import Question from "./components/group/Question";
 
 function App() {
+  const dispatch = useDispatch();
+  const user = useSelector((store) => store.user);
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if the current route is a public route where we don't need to fetch the user.
+    if (
+      location.pathname === "/" ||
+      location.pathname === "/login" ||
+      location.pathname === "/register"
+    ) {
+      return;
+    }
+
+    const fetchUser = async () => {
+      try {
+        console.log("Fetching user...");
+        const response = await axios.get("http://localhost:7777/profile/view", {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        dispatch(addUser(response.data));
+      } catch (e) {
+        // Redirect only if we're not already on the login page.
+        window.location.href = "/login";
+      }
+    };
+
+    if (!user) {
+      fetchUser();
+    }
+  }, [dispatch, location, user]);
+
   return (
-    <Router>
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+      />
       <Routes>
         {/* Auth routes */}
         <Route path="/" element={<Login />} />
@@ -69,7 +115,7 @@ function App() {
           }
         />
         <Route
-          path="/viewgroup/:grpID"
+          path="/viewgroup/:groupId"
           element={
             <Layout>
               <Protected Cmp={ViewGroup} />
@@ -92,8 +138,7 @@ function App() {
             </Layout>
           }
         />
-
-        {/* ✅ Question Route */}
+        {/* Question Route */}
         <Route
           path="/question/:qid/group/:grpID"
           element={
@@ -102,10 +147,15 @@ function App() {
             </Layout>
           }
         />
-
       </Routes>
-    </Router>
+    </>
   );
 }
 
-export default App;
+export default function RootApp() {
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+}

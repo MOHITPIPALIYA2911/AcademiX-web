@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import loginImg from '../../assets/bglogin.jpeg';
-import Logo from '../../assets/ClosedLogo5.jpg';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import loginImg from "../../assets/bglogin.jpeg";
+import Logo from "../../assets/ClosedLogo5.jpg";
+import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { addUser } from "../../utils/userSlice";
 
 const Login = () => {
-  const [formData, setFormData] = useState({ emailId: 'Clark@email.com', password: 'Clark@123' });
+  const [formData, setFormData] = useState({
+    emailId: "Clark@email.com",
+    password: "Clark@123",
+  });
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  //const user=useSelector(store=>store.user)
 
   // useEffect(() => {
   //   const token = localStorage.getItem('token');
@@ -35,41 +42,40 @@ const Login = () => {
     const { emailId, password } = formData;
 
     if (!emailId || !password) {
-      toast.error('❌ Please enter both email and password!');
+      toast.error("❌ Please enter both email and password!");
       return;
     }
 
     if (!isValidEmail(emailId)) {
-      toast.error('❌ Please enter a valid email address!');
+      toast.error("❌ Please enter a valid email address!");
       return;
     }
 
     try {
-      
-
       const response = await axios.post(
-        'http://localhost:7777/auth/login', // adjust to your backend URL
+        "http://localhost:7777/auth/login", // adjust to your backend URL
         formData,
         {
           withCredentials: true, // ensures cookies (if any) are included in the request/response
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
 
-      if (response.status===200) {
+      if (response.status === 200) {
         // no need for this as for every req. sent ,thers user_auth to check the token present in the cookie
-        // localStorage.setItem('token', data.token);
-        // localStorage.setItem('usertype', data.usertype);
-        toast.success('🎉 Login successful!');
-        navigate('/dashboard', { replace: true });
+        console.log(response);
+        toast.success("🎉 Login successful!");
+        navigate("/dashboard", { replace: true });
+
+        dispatch(addUser(response.data));
       } else {
-        toast.error('❌ Invalid credentials. Please try again.');
+        toast.error("❌ Invalid credentials. Please try again.");
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error('🚫 Something went wrong. Please try again later.');
+      console.error("Login error:", error);
+      toast.error("🚫 Something went wrong. Please try again later.");
     }
   };
 
@@ -86,7 +92,8 @@ const Login = () => {
           <h1 className="text-5xl font-bold mb-3">Welcome to AcademiX</h1>
           <b>Learn, Grow, Succeed!</b>
           <p className="pr-3 pt-8">
-            Empowering learners with knowledge and skills. Start your journey today!
+            Empowering learners with knowledge and skills. Start your journey
+            today!
           </p>
         </div>
 
@@ -103,7 +110,10 @@ const Login = () => {
             </div>
             <form className="space-y-5" onSubmit={handleLogin}>
               <div className="space-y-2">
-                <label htmlFor="emailId" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="emailId"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Email
                 </label>
                 <input
@@ -117,7 +127,10 @@ const Login = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Password
                 </label>
                 <input
@@ -136,7 +149,7 @@ const Login = () => {
                   Don't have an account?
                   <span
                     className="text-green-500 cursor-pointer hover:underline ml-1"
-                    onClick={() => navigate('/register')}
+                    onClick={() => navigate("/register")}
                   >
                     Register
                   </span>

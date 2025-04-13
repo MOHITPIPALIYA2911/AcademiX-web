@@ -1,5 +1,6 @@
-import React from 'react';
-import Icon from '@mdi/react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import Icon from "@mdi/react";
 import {
   mdiViewDashboardOutline,
   mdiAccountCircleOutline,
@@ -8,19 +9,21 @@ import {
   mdiAccountMultipleCheckOutline,
   mdiFolderMultipleOutline,
   mdiForumOutline,
-  mdiLogout
-} from '@mdi/js';
+  mdiLogout,
+} from "@mdi/js";
 
 const LeftSidebar = () => {
+  const navigate = useNavigate();
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("usertype");
     sessionStorage.clear();
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   const navigateTo = (path) => {
-    window.location.href = path;
+    navigate(path);
   };
 
   const NavItem = ({ icon, label, path }) => (
@@ -39,19 +42,45 @@ const LeftSidebar = () => {
 
       {/* General Navigation */}
       <div className="space-y-2 mb-6">
-        <NavItem icon={mdiViewDashboardOutline} label="Dashboard" path="/dashboard" />
-        <NavItem icon={mdiAccountCircleOutline} label="Profile" path="/profile" />
+        <NavItem
+          icon={mdiViewDashboardOutline}
+          label="Dashboard"
+          path="/dashboard"
+        />
+        <NavItem
+          icon={mdiAccountCircleOutline}
+          label="Profile"
+          path="/profile"
+        />
       </div>
 
       {/* Manage Groups Section */}
       <div className="mb-6">
-        <h3 className="uppercase text-xs font-semibold text-green-200 mb-2 tracking-wide pl-1">Manage Groups</h3>
+        <h3 className="uppercase text-xs font-semibold text-green-200 mb-2 tracking-wide pl-1">
+          Manage Groups
+        </h3>
         <nav className="space-y-2">
-          <NavItem icon={mdiAccountMultiplePlusOutline} label="Create Group" path="/creategroup" />
+          <NavItem
+            icon={mdiAccountMultiplePlusOutline}
+            label="Create Group"
+            path="/creategroup"
+          />
           <NavItem icon={mdiPin} label="My Groups" path="/mygroups" />
-          <NavItem icon={mdiAccountMultipleCheckOutline} label="Joined Groups" path="/joinedgroups" />
-          <NavItem icon={mdiFolderMultipleOutline} label="View Groups" path="/viewgroups" />
-          <NavItem icon={mdiForumOutline} label="Public Discussion" path="/publicdiscussion" />
+          <NavItem
+            icon={mdiAccountMultipleCheckOutline}
+            label="Joined Groups"
+            path="/joinedgroups"
+          />
+          <NavItem
+            icon={mdiFolderMultipleOutline}
+            label="View Groups"
+            path="/viewgroups"
+          />
+          <NavItem
+            icon={mdiForumOutline}
+            label="Public Discussion"
+            path="/publicdiscussion"
+          />
         </nav>
       </div>
 
