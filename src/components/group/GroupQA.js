@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { mdiThumbUpOutline } from "@mdi/js";
+import {
+  mdiThumbUpOutline,
+  mdiTrashCanOutline,
+  mdiPencilOutline,
+} from "@mdi/js";
 import Icon from "@mdi/react";
 import axios from "axios";
 import { useSelector } from "react-redux";
@@ -15,11 +19,14 @@ const GroupQA = ({ title, isPublic, groupId }) => {
   const [votedIds, setVotedIds] = useState([]);
   const [expanded, setExpanded] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-
-  // Toggle visibility of the AddQuestion form
   const [showAdd, setShowAdd] = useState(false);
 
-  // Optimistic vote toggle
+  // Edit state
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+
+  // Optimistic upvote
   const handleUpvote = async (id) => {
     const alreadyVoted = votedIds.includes(id);
     setQuestions((prev) =>
@@ -49,7 +56,6 @@ const GroupQA = ({ title, isPublic, groupId }) => {
         alreadyVoted ? prev.filter((vid) => vid !== id) : [...prev, id]
       );
     } catch {
-      // revert on error
       setQuestions((prev) =>
         prev.map((q) =>
           (q._id || q.id) === id
@@ -65,6 +71,46 @@ const GroupQA = ({ title, isPublic, groupId }) => {
     }
   };
 
+  // Delete handler
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this question?")) return;
+    try {
+      await axios.delete(`http://localhost:7777/posts/${id}`, {
+        withCredentials: true,
+      });
+      refreshQuestions();
+    } catch (err) {
+      const msg = err.response?.data?.error || "Error deleting post";
+      alert(msg);
+    }
+  };
+
+  // Start editing
+  const handleEditClick = (e, q) => {
+    e.stopPropagation();
+    setEditingId(q._id || q.id);
+    setEditTitle(q.title);
+    setEditContent(q.content || q.description || "");
+  };
+
+  // Save update
+  const handleUpdate = async (e, id) => {
+    e.stopPropagation();
+    try {
+      await axios.put(
+        `http://localhost:7777/posts/${id}`,
+        { title: editTitle, content: editContent },
+        { withCredentials: true }
+      );
+      setEditingId(null);
+      refreshQuestions();
+    } catch (err) {
+      const msg = err.response?.data?.error || "Error updating post";
+      alert(msg);
+    }
+  };
+
   const toggleExpand = (id) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -74,9 +120,7 @@ const GroupQA = ({ title, isPublic, groupId }) => {
         withCredentials: true,
       });
       setVotedIds(res.data.votedPostIds || []);
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   };
 
   const fetchingPublicQuestions = async () => {
@@ -87,9 +131,7 @@ const GroupQA = ({ title, isPublic, groupId }) => {
       });
       setQuestions(res.data || []);
       await fetchUserVotes();
-    } catch {
-      /* ignore */
-    } finally {
+    } catch {} finally {
       setIsLoading(false);
     }
   };
@@ -103,9 +145,7 @@ const GroupQA = ({ title, isPublic, groupId }) => {
       );
       setQuestions(res.data || []);
       await fetchUserVotes();
-    } catch {
-      /* ignore */
-    } finally {
+    } catch {} finally {
       setIsLoading(false);
     }
   };
@@ -121,7 +161,6 @@ const GroupQA = ({ title, isPublic, groupId }) => {
 
   return (
     <div className="space-y-6 p-4">
-      {/* Header with title + Add Question button */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-green-700">{title}</h2>
         <button
@@ -132,7 +171,6 @@ const GroupQA = ({ title, isPublic, groupId }) => {
         </button>
       </div>
 
-      {/* Conditionally render the AddQuestion form */}
       {showAdd && (
         <AddQuestion
           groupId={groupId}
@@ -144,7 +182,6 @@ const GroupQA = ({ title, isPublic, groupId }) => {
         />
       )}
 
-      {/* Questions list */}
       {isLoading ? (
         <div>Loading...</div>
       ) : questions.length === 0 ? (
@@ -152,18 +189,76 @@ const GroupQA = ({ title, isPublic, groupId }) => {
       ) : (
         questions.map((q) => {
           const id = q._id || q.id;
-          const desc = q.description || "";
+
+          // editing mode
+          if (editingId === id) {
+            return (
+              <div
+                key={id}
+                onClick={(e) => e.stopPropagation()}
+                className="relative bg-white border rounded-lg p-4 shadow m-3"
+              >
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full border p-2 rounded mb-2"
+                />
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={4}
+                  className="w-full border p-2 rounded mb-2"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => handleUpdate(e, id)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingId(null);
+                    }}
+                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // normal view
+          const desc = q.content || q.description || "";
           const hasVoted = votedIds.includes(id);
 
           return (
             <div
               key={id}
               onClick={() => navigate(`/publicdiscussion/question/${id}`)}
-              className="bg-white border rounded-lg p-4 shadow hover:shadow-md transition cursor-pointer m-3"
+              className="relative bg-white border rounded-lg p-4 shadow hover:shadow-md transition cursor-pointer m-3"
             >
-              <h3 className="text-lg font-semibold text-green-700">
-                {q.title}
-              </h3>
+              {/* Delete button */}
+              <button
+                onClick={(e) => handleDelete(e, id)}
+                className="absolute top-2 right-2 p-1 rounded hover:bg-red-100 transition"
+                title="Delete question"
+              >
+                <Icon path={mdiTrashCanOutline} size={0.8} className="text-gray-400 hover:text-red-600" />
+              </button>
+
+              {/* Edit button */}
+              <button
+                onClick={(e) => handleEditClick(e, q)}
+                className="absolute top-2 right-10 p-1 rounded hover:bg-gray-100 transition"
+                title="Edit question"
+              >
+                <Icon path={mdiPencilOutline} size={0.8} className="text-gray-500 hover:text-blue-600" />
+              </button>
+
+              <h3 className="text-lg font-semibold text-green-700">{q.title}</h3>
               <p className="text-gray-700 mt-2 text-sm leading-relaxed">
                 {expanded[id] || desc.length <= 150
                   ? desc
@@ -180,10 +275,7 @@ const GroupQA = ({ title, isPublic, groupId }) => {
                   </span>
                 )}
               </p>
-              <div
-                className="mt-4 flex items-center gap-3"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="mt-4 flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => handleUpvote(id)}
                   className={`flex items-center gap-1 px-3 py-1 border text-sm rounded-md transition ${
@@ -195,9 +287,7 @@ const GroupQA = ({ title, isPublic, groupId }) => {
                   <Icon path={mdiThumbUpOutline} size={0.85} />
                   {hasVoted ? "Undo Upvote" : "Upvote"}
                 </button>
-                <span className="text-sm text-gray-700">
-                  {q.votes || 0} vote{(q.votes || 0) !== 1 && "s"}
-                </span>
+                <span className="text-sm text-gray-700">{q.votes || 0} vote{(q.votes || 0) !== 1 && "s"}</span>
               </div>
             </div>
           );
