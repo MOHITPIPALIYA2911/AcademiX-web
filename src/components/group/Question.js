@@ -1,270 +1,313 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { mdiThumbUpOutline, mdiReply } from "@mdi/js";
+// src/pages/Question.js
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  mdiThumbUpOutline,
+  mdiStar,
+  mdiStarOutline,
+  mdiPencilOutline,
+  mdiTrashCanOutline,
+} from "@mdi/js";
 import Icon from "@mdi/react";
+import CommentSection from "./CommentSection";
+import AddAnswer from "../AddAnswer";
 
-const Question = () => { 
+const Question = () => {
   const { qid, grpID } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const groupId = location.state?.groupId;
 
-  const [answers, setAnswers] = useState([
-    {
-      id: "a1",
-      content: "Use a recursive CommentTree component with tree-structured data!",
-      votes: 7,
-      comments: [
-        {
-          id: "c1",
-          text: "Can you give an example?",
-          replies: [
-            {
-              id: "c2",
-              text: "Sure! Just call the component inside itself.",
-              replies: [
-                {
-                  id: "c3",
-                  text: "Ah! That makes sense now.",
-                  replies: [],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ]);
-
-  const [mainComment, setMainComment] = useState("");
-  const [showMainInput, setShowMainInput] = useState(false);
-  const [replyBoxOpen, setReplyBoxOpen] = useState({});
-  const [replyInputs, setReplyInputs] = useState({});
+  const [question, setQuestion] = useState(null);
+  const [answers, setAnswers] = useState([]);
   const [votedAnswers, setVotedAnswers] = useState([]);
+  const [showAdd, setShowAdd] = useState(false);
 
-  const question = {
-    id: qid,
-    title: "How to build a nested comment system in React?",
-    description:
-      "I'm trying to allow threaded discussions inside my app like Reddit or GitHub discussions. What's the best data model and rendering strategy?",
+  // Editing state for answers
+  const [editingAnswerId, setEditingAnswerId] = useState(null);
+  const [editAnswerContent, setEditAnswerContent] = useState("");
+
+  // Fetch question + answers
+  const fetchData = async () => {
+    try {
+      const { data } = await axios.get(
+        `http://localhost:7777/posts/${qid}`,
+        { withCredentials: true }
+      );
+      setQuestion(data.post);
+      setAnswers(data.answers);
+    } catch (err) {
+      console.error("Error fetching question:", err);
+    }
   };
 
-  const handleUpvote = (answerId) => {
-    if (votedAnswers.includes(answerId)) return;
+  // Fetch which answers user has upvoted
+  const fetchVotes = async () => {
+    if (!answers.length) return;
+    try {
+      const res = await axios.get("http://localhost:7777/votes/myVotes", {
+        withCredentials: true,
+      });
+      const votedSet = new Set(res.data.votedPostIds || []);
+      setVotedAnswers(
+        answers.map((a) => a._id).filter((id) => votedSet.has(id))
+      );
+    } catch (err) {
+      console.error("Error fetching votes:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [qid]);
+
+  useEffect(() => {
+    fetchVotes();
+  }, [answers]);
+
+  // Toggle upvote
+  const handleUpvote = async (answerId) => {
+    const already = votedAnswers.includes(answerId);
     setAnswers((prev) =>
       prev.map((a) =>
-        a.id === answerId ? { ...a, votes: (a.votes || 0) + 1 } : a
+        a._id === answerId
+          ? { ...a, votes: already ? Math.max((a.votes || 1) - 1, 0) : (a.votes || 0) + 1 }
+          : a
       )
     );
-    setVotedAnswers([...votedAnswers, answerId]);
+    try {
+      const { data } = await axios.post(
+        `http://localhost:7777/votes/${answerId}`,
+        {},
+        { withCredentials: true }
+      );
+      setAnswers((prev) =>
+        prev.map((a) => (a._id === answerId ? { ...a, votes: data.votes } : a))
+      );
+      setVotedAnswers((prev) =>
+        already ? prev.filter((id) => id !== answerId) : [...prev, answerId]
+      );
+    } catch (err) {
+      console.error("Error toggling vote:", err);
+      // revert
+      setAnswers((prev) =>
+        prev.map((a) =>
+          a._id === answerId
+            ? { ...a, votes: already ? (a.votes || 0) + 1 : Math.max((a.votes || 1) - 1, 0) }
+            : a
+        )
+      );
+    }
   };
 
-  const handleReplyInputChange = (commentId, value) => {
-    setReplyInputs((prev) => ({ ...prev, [commentId]: value }));
+  // Toggle approval (only server will allow)
+  const handleApprove = async (answerId) => {
+    try {
+      const { data } = await axios.put(
+        `http://localhost:7777/posts/${answerId}/approve`,
+        {},
+        { withCredentials: true }
+      );
+      setAnswers((prev) =>
+        prev.map((a) =>
+          a._id === answerId ? { ...a, approved_flag: data.answer.approved_flag } : a
+        )
+      );
+    } catch (err) {
+      if (err.response?.status === 403) {
+        alert("You do not have permission to approve this answer.");
+      } else {
+        console.error("Error toggling approval:", err);
+      }
+    }
   };
 
-  const handlePostReply = (parentId) => {
-    const inputValue = replyInputs[parentId]?.trim();
-    if (!inputValue) return;
-
-    const newReply = {
-      id: `r-${Date.now()}`,
-      text: inputValue,
-      replies: [],
-    };
-
-    const updateReplies = (comments) =>
-      comments.map((c) => {
-        if (c.id === parentId) {
-          return { ...c, replies: [...c.replies, newReply] };
-        }
-        return { ...c, replies: updateReplies(c.replies || []) };
-      });
-
-    setAnswers((prev) =>
-      prev.map((a) => ({
-        ...a,
-        comments: updateReplies(a.comments),
-      }))
-    );
-
-    setReplyInputs((prev) => ({ ...prev, [parentId]: "" }));
-    setReplyBoxOpen((prev) => ({ ...prev, [parentId]: false }));
+  // Delete answer
+  const handleDeleteAnswer = async (e, answerId) => {
+    e.stopPropagation();
+    if (!window.confirm("Delete this answer?")) return;
+    try {
+      await axios.delete(
+        `http://localhost:7777/posts/${answerId}`,
+        { withCredentials: true }
+      );
+      fetchData();
+    } catch (err) {
+      const msg = err.response?.data?.error || "Error deleting answer";
+      alert(msg);
+    }
   };
 
-  const handlePostMainComment = () => {
-    if (!mainComment.trim()) return;
-    const newComment = {
-      id: `c-${Date.now()}`,
-      text: mainComment.trim(),
-      replies: [],
-    };
-
-    setAnswers((prev) =>
-      prev.map((a, i) =>
-        i === 0 ? { ...a, comments: [...a.comments, newComment] } : a
-      )
-    );
-
-    setMainComment("");
-    setShowMainInput(false);
+  // Start editing answer
+  const handleEditAnswerClick = (e, answer) => {
+    e.stopPropagation();
+    setEditingAnswerId(answer._id);
+    setEditAnswerContent(answer.content);
   };
 
-  const CommentTree = ({ comments }) => {
-    if (!comments?.length) return null;
-
-    return (
-      <ul className="ml-4 border-l pl-4 mt-2 space-y-3">
-        {comments.map((c) => (
-          <li key={c.id}>
-            <div className="flex items-start justify-between">
-              <p className="text-sm text-gray-800">{c.text}</p>
-              <button
-                onClick={() =>
-                  setReplyBoxOpen((prev) => ({
-                    ...prev,
-                    [c.id]: !prev[c.id],
-                  }))
-                }
-                className="text-xs text-gray-500 hover:text-green-600 flex items-center gap-1 ml-2"
-              >
-                <Icon path={mdiReply} size={0.6} />
-                Reply
-              </button>
-            </div>
-
-            {replyBoxOpen[c.id] && (
-              <div className="mt-2 ml-2 space-y-1">
-                <textarea
-                  value={replyInputs[c.id] || ""}
-                  onChange={(e) =>
-                    handleReplyInputChange(c.id, e.target.value)
-                  }
-                  className="w-full border rounded p-2 text-sm resize-none"
-                  rows={2}
-                  placeholder="Write a reply..."
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handlePostReply(c.id)}
-                    className={`text-sm px-3 py-1 rounded text-white bg-green-600 hover:bg-green-700 transition ${
-                      !(replyInputs[c.id]?.trim()) ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={!replyInputs[c.id]?.trim()}
-                  >
-                    Post
-                  </button>
-                  <button
-                    onClick={() =>
-                      setReplyBoxOpen((prev) => ({
-                        ...prev,
-                        [c.id]: false,
-                      }))
-                    }
-                    className="text-sm px-3 py-1 border rounded hover:bg-gray-100"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-            <CommentTree comments={c.replies} />
-          </li>
-        ))}
-      </ul>
-    );
+  // Save updated answer
+  const handleUpdateAnswer = async (e, answerId) => {
+    e.stopPropagation();
+    try {
+      await axios.put(
+        `http://localhost:7777/posts/${answerId}`,
+        { content: editAnswerContent },
+        { withCredentials: true }
+      );
+      setEditingAnswerId(null);
+      fetchData();
+    } catch (err) {
+      const msg = err.response?.data?.error || "Error updating answer";
+      alert(msg);
+    }
   };
+
+  if (!question) return <div>Loading question...</div>;
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
-      {/* ✅ Back Button */}
       {grpID && (
         <button
-        onClick={() => navigate(`/viewgroup/${grpID}`)}
+          onClick={() => navigate(`/viewgroup/${grpID}`)}
           className="text-sm text-green-700 hover:underline"
         >
           ← Back to Group
         </button>
       )}
-      <div>
-        <h1 className="text-2xl font-bold text-green-700 mb-2">{question.title}</h1>
-        <p className="text-gray-700">{question.description}</p>
-      </div>
 
       <div>
-        <h2 className="text-xl font-semibold text-gray-800 mb-3">Answers</h2>
-        {answers.map((answer) => (
+        <h1 className="text-2xl font-bold text-green-700 mb-2">
+          {question.title}
+        </h1>
+        <p className="text-gray-700">{question.content}</p>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-800">Answers</h2>
+        <button
+          onClick={() => setShowAdd((v) => !v)}
+          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm"
+        >
+          {showAdd ? "Cancel" : "Add Answer"}
+        </button>
+      </div>
+
+      {showAdd && (
+        <AddAnswer
+          questionId={qid}
+          onSuccess={() => {
+            setShowAdd(false);
+            fetchData();
+          }}
+        />
+      )}
+
+      {answers.map((answer) => {
+        // If this answer is in edit mode
+        if (editingAnswerId === answer._id) {
+          return (
+            <div
+              key={answer._id}
+              className="relative bg-white border rounded p-4 shadow mb-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <textarea
+                rows={3}
+                value={editAnswerContent}
+                onChange={(e) => setEditAnswerContent(e.target.value)}
+                className="w-full border p-2 rounded mb-2"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => handleUpdateAnswer(e, answer._id)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingAnswerId(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        // Normal view mode
+        const isVoted = votedAnswers.includes(answer._id);
+        return (
           <div
-            key={answer.id}
-            className="bg-white border rounded p-4 shadow hover:shadow-md transition mb-6"
+            key={answer._id}
+            className="relative bg-white border rounded p-4 shadow mb-6 hover:shadow-md transition"
           >
-            <p className="text-gray-800">{answer.content}</p>
+{/* Approve star (left) */}
+<button
+  onClick={() => handleApprove(answer._id)}
+  className="absolute top-2 left-2 p-1 hover:bg-gray-100 rounded"
+  title={answer.approved_flag ? "Approved answer" : "Click to approve"}
+>
+  <Icon
+    path={answer.approved_flag ? mdiStar : mdiStarOutline}
+    size={0.8}
+    className={`opacity-60 ${
+      answer.approved_flag ? "text-yellow-400" : "text-gray-300"
+    }`}
+  />
+</button>
+
+{/* Edit and Delete buttons (right side) */}
+<div className="absolute top-2 right-2 flex gap-2">
+  <button
+    onClick={(e) => handleEditAnswerClick(e, answer)}
+    className="p-1 hover:bg-gray-100 rounded"
+    title="Edit answer"
+  >
+    <Icon
+      path={mdiPencilOutline}
+      size={0.8}
+      className="text-gray-500 hover:text-blue-600"
+    />
+  </button>
+  <button
+    onClick={(e) => handleDeleteAnswer(e, answer._id)}
+    className="p-1 hover:bg-gray-100 rounded"
+    title="Delete answer"
+  >
+    <Icon
+      path={mdiTrashCanOutline}
+      size={0.8}
+      className="text-gray-400 hover:text-red-600"
+    />
+  </button>
+</div>
+<div className="mt-5"><p className="text-gray-800">{answer.content}</p></div>
+            
 
             <div className="mt-3 flex items-center gap-4">
               <button
-                onClick={() => handleUpvote(answer.id)}
+                onClick={() => handleUpvote(answer._id)}
                 className={`flex items-center gap-1 text-sm px-3 py-1 rounded border transition ${
-                  votedAnswers.includes(answer.id)
-                    ? "border-gray-300 text-gray-400"
+                  isVoted
+                    ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
                     : "border-green-500 text-green-600 hover:bg-green-50"
                 }`}
               >
                 <Icon path={mdiThumbUpOutline} size={0.8} />
-                Upvote
+                {isVoted ? "Undo Upvote" : "Upvote"}
               </button>
               <span className="text-sm text-gray-600">
-                {answer.votes || 0} vote{(answer.votes || 0) !== 1 ? "s" : ""}
+                {answer.votes || 0} vote{(answer.votes || 0) !== 1 && "s"}
               </span>
             </div>
 
-            {/* Comments */}
-            <div className="mt-4 space-y-2">
-              <h4 className="text-sm font-semibold text-gray-700">Comments</h4>
-              <CommentTree comments={answer.comments} />
-
-              {/* Main comment box */}
-              {showMainInput ? (
-                <div className="mt-3 space-y-1">
-                  <textarea
-                    value={mainComment}
-                    onChange={(e) => setMainComment(e.target.value)}
-                    rows={3}
-                    className="w-full border rounded p-2 text-sm resize-none"
-                    placeholder="Write a comment..."
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handlePostMainComment}
-                      className={`text-sm px-3 py-1 rounded text-white bg-green-600 hover:bg-green-700 transition ${
-                        !mainComment.trim() ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      disabled={!mainComment.trim()}
-                    >
-                      Post
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowMainInput(false);
-                        setMainComment("");
-                      }}
-                      className="text-sm px-3 py-1 border rounded hover:bg-gray-100"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowMainInput(true)}
-                  className="text-sm text-green-600 hover:underline mt-2"
-                >
-                  Add a comment
-                </button>
-              )}
-            </div>
+            <CommentSection answerId={answer._id} />
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 };

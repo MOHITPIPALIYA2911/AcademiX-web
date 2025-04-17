@@ -92,6 +92,15 @@ function App() {
             </Layout>
           }
         />
+        {/* Question Route */}
+        <Route
+          path="/publicdiscussion/question/:qid"
+          element={
+            <Layout>
+              <Protected Cmp={Question} />
+            </Layout>
+          }
+        />
         <Route
           path="/creategroup"
           element={

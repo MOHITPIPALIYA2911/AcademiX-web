@@ -131,7 +131,7 @@ const GroupLayout = () => {
       case "dashboard":
         return <GroupHome description={group?.description} />;
       case "qa":
-        return <GroupQA />;
+        return <GroupQA title={"Q&A"} groupId={groupId} isPublic={false}/>;
       case "discussion":
         return <GroupDiscussion />;
       case "members":
