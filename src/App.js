@@ -22,6 +22,7 @@ import JoinedGroups from "./pages/managegroup/JoinedGroup";
 import PublicDiscussion from "./pages/publicdiscussion/PublicDiscussion";
 import ViewGroup from "./pages/managegroup/ViewGroup";
 import Question from "./components/group/Question";
+import JoinGroup from "./pages/managegroup/JoinGroup";
 
 function App() {
   const dispatch = useDispatch();
@@ -94,7 +95,7 @@ function App() {
         />
         {/* Question Route */}
         <Route
-          path="/publicdiscussion/question/:qid"
+          path="/publicdiscussion/question/:qid/group/:grpID"
           element={
             <Layout>
               <Protected Cmp={Question} />
@@ -110,7 +111,7 @@ function App() {
           }
         />
         <Route
-          path="/viewgroup/:groupId"
+          path="/viewgroup/:groupId/from/:frm"
           element={
             <Layout>
               <Protected Cmp={ViewGroup} />
@@ -139,6 +140,16 @@ function App() {
           element={
             <Layout>
               <Protected Cmp={Question} />
+            </Layout>
+          }
+        />
+
+        {/* joingroup Route */}
+        <Route
+          path="/joingroup"
+          element={
+            <Layout>
+              <Protected Cmp={JoinGroup} />
             </Layout>
           }
         />

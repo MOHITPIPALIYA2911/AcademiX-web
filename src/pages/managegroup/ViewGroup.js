@@ -18,6 +18,7 @@ import GroupMembers from "../../components/group/GroupMembers";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { triggerNotification } from "../../utils/toastUtil";
+import Breadcrumb from "../../components/breadcrumb/Breadcrumb";
 
 const tabs = [
   { key: "dashboard", label: "Group Home", icon: mdiHomeOutline },
@@ -28,7 +29,7 @@ const tabs = [
 ];
 
 const GroupLayout = () => {
-  const { groupId } = useParams();
+  const { groupId, frm } = useParams();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [group, setGroup] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -113,6 +114,20 @@ const GroupLayout = () => {
     }
   };
 
+  const handleLeaveGroup = async () => {
+    try {
+      await axios.delete(`http://localhost:7777/groups/${groupId}/leave`, {
+        withCredentials: true,
+      });
+      triggerNotification("success", "You left the group");
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Leave group error:", err);
+      triggerNotification("error", "Failed to leave group");
+    }
+  };
+
+
   const handleDelete = async () => {
     try {
       await axios.delete(`http://localhost:7777/groups/${groupId}`, {
@@ -131,7 +146,7 @@ const GroupLayout = () => {
       case "dashboard":
         return <GroupHome description={group?.description} />;
       case "qa":
-        return <GroupQA title={"Q&A"} groupId={groupId} isPublic={false}/>;
+        return <GroupQA title={"Q&A"} groupId={groupId} isPublic={false} />;
       case "discussion":
         return <GroupDiscussion />;
       case "members":
@@ -153,9 +168,8 @@ const GroupLayout = () => {
             <div key={tab.key} className="relative group">
               <button
                 onClick={() => setActiveTab(tab.key)}
-                className={`text-gray-500 hover:text-green-600 transition ${
-                  activeTab === tab.key ? "text-green-600" : ""
-                }`}
+                className={`text-gray-500 hover:text-green-600 transition ${activeTab === tab.key ? "text-green-600" : ""
+                  }`}
               >
                 <Icon path={tab.icon} size={1.1} />
               </button>
@@ -169,6 +183,32 @@ const GroupLayout = () => {
 
       {/* Main */}
       <div className="flex-1 p-6">
+
+
+        {frm == "mygrp" ? <Breadcrumb
+          paths={[
+            { label: "My Groups", path: `/mygroups` },
+            { label: "Question" },
+          ]}
+        /> : frm == "dashboard" ? <Breadcrumb
+          paths={[
+            { label: "Dashboard", path: "/dashboard" },
+            { label: "Question" },
+          ]}
+        /> : frm == "joinedgrp" ? <Breadcrumb
+          paths={[
+            { label: "Joined Groups", path: "/joinedgroups" },
+            { label: "Question" },
+          ]}
+        /> : frm == "joingrp" ? <Breadcrumb
+          paths={[
+            { label: "Join Group", path: "/joingroup" },
+            { label: "Question" },
+          ]}
+        /> : ""}
+
+
+
         {group && (
           <div className="mb-6 flex justify-between items-start flex-wrap gap-4">
             <div className="flex-1">
@@ -192,24 +232,35 @@ const GroupLayout = () => {
               )}
             </div>
 
-            {group.role === "Moderator" && (
-              <div className="flex gap-3">
+            <div className="flex gap-3">
+              {group.role === "Moderator" ? (
+                <>
+                  <button
+                    onClick={handleEditClick}
+                    className="flex items-center gap-2 px-4 py-2 border border-green-600 text-green-700 rounded-md hover:bg-green-50 transition text-sm"
+                  >
+                    <Icon path={mdiPencilOutline} size={0.85} />
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="flex items-center gap-2 px-4 py-2 border border-red-500 text-red-600 rounded-md hover:bg-red-50 transition text-sm"
+                  >
+                    <Icon path={mdiDeleteOutline} size={0.85} />
+                    Delete
+                  </button>
+                </>
+              ) : (
                 <button
-                  onClick={handleEditClick}
-                  className="flex items-center gap-2 px-4 py-2 border border-green-600 text-green-700 rounded-md hover:bg-green-50 transition text-sm"
-                >
-                  <Icon path={mdiPencilOutline} size={0.85} />
-                  Edit
-                </button>
-                <button
-                  onClick={handleDelete}
+                  onClick={handleLeaveGroup}
                   className="flex items-center gap-2 px-4 py-2 border border-red-500 text-red-600 rounded-md hover:bg-red-50 transition text-sm"
                 >
                   <Icon path={mdiDeleteOutline} size={0.85} />
-                  Delete
+                  Leave Group
                 </button>
-              </div>
-            )}
+              )}
+            </div>
+
           </div>
         )}
 

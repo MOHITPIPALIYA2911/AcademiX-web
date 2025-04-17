@@ -43,13 +43,16 @@ const JoinedGroups = () => {
           {joinedGroups.map((group) => (
             <div
               key={group._id}
-              onClick={() => navigate(`/viewgroup/${group._id}`)}
+              onClick={() => navigate(`/viewgroup/${group._id}/from/joinedgrp`)}
               className="cursor-pointer bg-gray-100 border-l-4 border-green-500 p-5 rounded-lg shadow hover:shadow-md transition"
             >
               <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                 <span role="img" aria-label="group">👥</span> {group.group_name}
               </h3>
-              <p className="text-sm text-gray-600 mt-1">{group.description}</p>
+              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                {group.description}
+              </p>
+
             </div>
           ))}
         </div>

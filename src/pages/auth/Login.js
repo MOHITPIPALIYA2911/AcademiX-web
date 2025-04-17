@@ -26,6 +26,18 @@ const Login = () => {
   //   }
   // }, [navigate]);
 
+  const getTokenFromCookie = () => {
+    const match = document.cookie.match(/(^| )token=([^;]+)/);
+    return match ? match[2] : null;
+  };
+
+  // useEffect(() => {
+  //   const token = getTokenFromCookie();
+  //   if (token) {
+  //     navigate("/dashboard", { replace: true });
+  //   }
+  // }, [navigate]);
+  
   const isValidEmail = (email) => {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return regex.test(email);

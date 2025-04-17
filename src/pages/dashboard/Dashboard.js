@@ -36,14 +36,17 @@ const GroupSection = ({
           {(limit > 0 ? groups.slice(0, limit) : groups).map((group, index) => (
             <div
               key={index}
-              onClick={() => navigate(`/viewgroup/${group._id}`)}
+              onClick={() => navigate(`/viewgroup/${group._id}/from/dashboard`)}
               className="cursor-pointer bg-gray-100 border-l-4 border-green-400 rounded-lg p-4 shadow hover:shadow-md transition-all duration-300"
             >
               <h4 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <span role="img" aria-label="group">👥</span>
                 {group.group_name}
               </h4>
-              <p className="text-sm text-gray-600 mt-1">{group.description}</p>
+              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                {group.description}
+              </p>
+
             </div>
           ))}
         </div>

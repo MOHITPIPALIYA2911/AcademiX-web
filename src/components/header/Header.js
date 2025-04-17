@@ -12,11 +12,13 @@ const Header = () => {
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
-  const logout = () => {
-    dispatch(removeUser());
+  const logout = () => { 
+    sessionStorage.clear(); 
+    document.cookie = "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;"; 
+    dispatch(removeUser()); 
     navigate("/login");
   };
-
+  
   const goToProfile = () => {
     navigate("/profile");
   };

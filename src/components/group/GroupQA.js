@@ -12,7 +12,7 @@ import AddQuestion from "../AddQuestion";
 
 const GroupQA = ({ title, isPublic, groupId }) => {
   const navigate = useNavigate();
-  const { grpID } = useParams();
+  // const { grpID } = useParams();
   const user = useSelector((store) => store.user);
 
   const [questions, setQuestions] = useState([]);
@@ -237,7 +237,7 @@ const GroupQA = ({ title, isPublic, groupId }) => {
           return (
             <div
               key={id}
-              onClick={() => navigate(`/publicdiscussion/question/${id}`)}
+              onClick={() => navigate(`/publicdiscussion/question/${id}/group/${groupId}`)}
               className="relative bg-white border rounded-lg p-4 shadow hover:shadow-md transition cursor-pointer m-3"
             >
               {/* Delete button */}

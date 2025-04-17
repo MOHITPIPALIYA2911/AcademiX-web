@@ -12,9 +12,10 @@ import {
 import Icon from "@mdi/react";
 import CommentSection from "./CommentSection";
 import AddAnswer from "../AddAnswer";
+import Breadcrumb from "../breadcrumb/Breadcrumb";
 
 const Question = () => {
-  const { qid, grpID } = useParams();
+  const { qid,grpID } = useParams();
   const navigate = useNavigate();
 
   const [question, setQuestion] = useState(null);
@@ -165,14 +166,14 @@ const Question = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
-      {grpID && (
-        <button
-          onClick={() => navigate(`/viewgroup/${grpID}`)}
-          className="text-sm text-green-700 hover:underline"
-        >
-          ← Back to Group
-        </button>
-      )}
+      <Breadcrumb
+        paths={[
+          { label: "Dashboard", path: "/dashboard" },
+          { label: "Group", path: `/viewgroup/${grpID}/from/dashboard` }, 
+          { label: "Question" },
+        ]}
+      />
+
 
       <div>
         <h1 className="text-2xl font-bold text-green-700 mb-2">
@@ -244,57 +245,55 @@ const Question = () => {
             key={answer._id}
             className="relative bg-white border rounded p-4 shadow mb-6 hover:shadow-md transition"
           >
-{/* Approve star (left) */}
-<button
-  onClick={() => handleApprove(answer._id)}
-  className="absolute top-2 left-2 p-1 hover:bg-gray-100 rounded"
-  title={answer.approved_flag ? "Approved answer" : "Click to approve"}
->
-  <Icon
-    path={answer.approved_flag ? mdiStar : mdiStarOutline}
-    size={0.8}
-    className={`opacity-60 ${
-      answer.approved_flag ? "text-yellow-400" : "text-gray-300"
-    }`}
-  />
-</button>
+            {/* Approve star (left) */}
+            <button
+              onClick={() => handleApprove(answer._id)}
+              className="absolute top-2 left-2 p-1 hover:bg-gray-100 rounded"
+              title={answer.approved_flag ? "Approved answer" : "Click to approve"}
+            >
+              <Icon
+                path={answer.approved_flag ? mdiStar : mdiStarOutline}
+                size={0.8}
+                className={`opacity-60 ${answer.approved_flag ? "text-yellow-400" : "text-gray-300"
+                  }`}
+              />
+            </button>
 
-{/* Edit and Delete buttons (right side) */}
-<div className="absolute top-2 right-2 flex gap-2">
-  <button
-    onClick={(e) => handleEditAnswerClick(e, answer)}
-    className="p-1 hover:bg-gray-100 rounded"
-    title="Edit answer"
-  >
-    <Icon
-      path={mdiPencilOutline}
-      size={0.8}
-      className="text-gray-500 hover:text-blue-600"
-    />
-  </button>
-  <button
-    onClick={(e) => handleDeleteAnswer(e, answer._id)}
-    className="p-1 hover:bg-gray-100 rounded"
-    title="Delete answer"
-  >
-    <Icon
-      path={mdiTrashCanOutline}
-      size={0.8}
-      className="text-gray-400 hover:text-red-600"
-    />
-  </button>
-</div>
-<div className="mt-5"><p className="text-gray-800">{answer.content}</p></div>
-            
+            {/* Edit and Delete buttons (right side) */}
+            <div className="absolute top-2 right-2 flex gap-2">
+              <button
+                onClick={(e) => handleEditAnswerClick(e, answer)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="Edit answer"
+              >
+                <Icon
+                  path={mdiPencilOutline}
+                  size={0.8}
+                  className="text-gray-500 hover:text-blue-600"
+                />
+              </button>
+              <button
+                onClick={(e) => handleDeleteAnswer(e, answer._id)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="Delete answer"
+              >
+                <Icon
+                  path={mdiTrashCanOutline}
+                  size={0.8}
+                  className="text-gray-400 hover:text-red-600"
+                />
+              </button>
+            </div>
+            <div className="mt-5"><p className="text-gray-800">{answer.content}</p></div>
+
 
             <div className="mt-3 flex items-center gap-4">
               <button
                 onClick={() => handleUpvote(answer._id)}
-                className={`flex items-center gap-1 text-sm px-3 py-1 rounded border transition ${
-                  isVoted
+                className={`flex items-center gap-1 text-sm px-3 py-1 rounded border transition ${isVoted
                     ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
                     : "border-green-500 text-green-600 hover:bg-green-50"
-                }`}
+                  }`}
               >
                 <Icon path={mdiThumbUpOutline} size={0.8} />
                 {isVoted ? "Undo Upvote" : "Upvote"}

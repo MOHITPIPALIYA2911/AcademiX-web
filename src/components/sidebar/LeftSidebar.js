@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "@mdi/react";
 import {
   mdiViewDashboardOutline,
@@ -9,17 +9,21 @@ import {
   mdiAccountMultipleCheckOutline,
   mdiForumOutline,
   mdiLogout,
-  mdiAccountArrowRightOutline, 
+  mdiAccountArrowRightOutline,
 } from "@mdi/js";
-
+import { useDispatch } from "react-redux";
+import { removeUser } from "../../utils/userSlice";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const location = useLocation();
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usertype");
     sessionStorage.clear();
+    document.cookie =
+      "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    dispatch(removeUser());
     navigate("/login");
   };
 
@@ -27,15 +31,23 @@ const LeftSidebar = () => {
     navigate(path);
   };
 
-  const NavItem = ({ icon, label, path }) => (
-    <div
-      onClick={() => navigateTo(path)}
-      className="flex items-center gap-3 py-2 px-4 rounded hover:bg-green-700 cursor-pointer"
-    >
-      <Icon path={icon} size={1} />
-      <span>{label}</span>
-    </div>
-  );
+  const NavItem = ({ icon, label, path }) => {
+    const isActive = location.pathname === path;
+
+    return (
+      <div
+        onClick={() => navigateTo(path)}
+        className={`flex items-center gap-3 py-2 px-4 rounded cursor-pointer transition ${
+          isActive
+            ? "bg-green-800 font-semibold"
+            : "hover:bg-green-700"
+        }`}
+      >
+        <Icon path={icon} size={1} />
+        <span>{label}</span>
+      </div>
+    );
+  };
 
   return (
     <aside className="w-64 bg-green-600 text-white flex flex-col p-5 min-h-screen">
@@ -78,13 +90,12 @@ const LeftSidebar = () => {
             path="/publicdiscussion"
           />
           <NavItem
-            icon={mdiAccountArrowRightOutline} 
+            icon={mdiAccountArrowRightOutline}
             label="Join Group"
             path="/joingroup"
           />
         </nav>
       </div>
-
 
       {/* Logout */}
       <div className="mt-auto">
