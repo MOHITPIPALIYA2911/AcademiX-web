@@ -1,18 +1,23 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const GroupMembers = ({ groupId }) => {
   const [members, setMembers] = useState([]);
 
   useEffect(() => {
-    // Dummy data — replace with actual fetch using groupId
-    const dummy = [
-      { id: "1", name: "Alice Johnson", img: "https://i.pravatar.cc/150?img=1" },
-      { id: "2", name: "Bob Singh", img: "https://i.pravatar.cc/150?img=2" },
-      { id: "3", name: "Clara Ray", img: "https://i.pravatar.cc/150?img=3" },
-      { id: "4", name: "David Wu", img: "https://i.pravatar.cc/150?img=4" },
-      { id: "5", name: "Eva Thomas", img: "https://i.pravatar.cc/150?img=5" },
-    ];
-    setMembers(dummy);
+    const fetchMembers = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:7777/groups/${groupId}/members`,
+          { withCredentials: true }
+        );
+        setMembers(res.data);
+      } catch (error) {
+        console.error("Failed to fetch group members:", error);
+      }
+    };
+
+    if (groupId) fetchMembers();
   }, [groupId]);
 
   return (
@@ -22,17 +27,24 @@ const GroupMembers = ({ groupId }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {members.map((member) => (
           <div
-            key={member.id}
+            key={member._id}
             className="flex items-center gap-4 bg-white border rounded-lg p-4 shadow hover:shadow-md transition"
           >
             <img
-              src={member.img}
-              alt={member.name}
+              src={member.user_id.profile_pic}
+              alt="Profile"
               className="w-12 h-12 rounded-full object-cover border"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src =
+                  "https://cdn.jsdelivr.net/npm/@mdi/svg/svg/account-circle.svg";
+              }}
             />
             <div>
-              <h3 className="text-sm font-semibold text-gray-800">{member.name}</h3>
-              <p className="text-xs text-gray-500">Member</p>
+              <h3 className="text-sm font-semibold text-gray-800">
+                {member.user_id.firstName+ " "+member.user_id.lastName}
+              </h3>
+              <p className="text-xs text-gray-500">{member.role_in_group}</p>
             </div>
           </div>
         ))}

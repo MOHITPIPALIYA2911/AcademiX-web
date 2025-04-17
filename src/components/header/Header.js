@@ -1,21 +1,26 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { removeUser } from "../../utils/userSlice"; // Adjust the import path as needed
 
 const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usertype");
-    sessionStorage.clear();
+    dispatch(removeUser());
     navigate("/login");
   };
 
-  // Close dropdown when clicking outside
+  const goToProfile = () => {
+    navigate("/profile");
+  };
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -47,25 +52,33 @@ const Header = () => {
           className="focus:outline-none flex items-center space-x-2"
         >
           <img
-            src="/assets/img/avatars/1.png"
+            src={user?.profile_pic || "https://cdn.jsdelivr.net/npm/@mdi/svg/svg/account-circle.svg"}
             alt="User Avatar"
             className="w-10 h-10 rounded-full border"
-            onError={(e) => (e.target.style.display = "none")} // fallback if image not found
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "https://cdn.jsdelivr.net/npm/@mdi/svg/svg/account-circle.svg";
+            }}
           />
           <span className="hidden md:inline text-gray-700 font-medium">
-            John Doe
+            {user?.firstName || "User"}
           </span>
         </button>
 
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50">
             <div className="px-4 py-3 border-b">
-              <p className="text-sm font-medium text-gray-800">John Doe</p>
-              <p className="text-xs text-gray-500">Admin</p>
+              <p className="text-sm font-medium text-gray-800">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-gray-500">{user?.emailId}</p>
             </div>
             <ul className="py-2">
               <li>
-                <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <button
+                  onClick={goToProfile}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   My Profile
                 </button>
               </li>
