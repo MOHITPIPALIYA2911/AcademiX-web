@@ -16,7 +16,6 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import Layout from "./components/Layout";
 import Protected from "./pages/Protected";
 import Profile from "./pages/manageprofile/Profile";
-import ViewGroups from "./pages/managegroup/ViewGroups";
 import CreateGroup from "./pages/managegroup/CreateGroup";
 import MyGroups from "./pages/managegroup/MyGroups";
 import JoinedGroups from "./pages/managegroup/JoinedGroup";
@@ -62,11 +61,6 @@ function App() {
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-      />
       <Routes>
         {/* Auth routes */}
         <Route path="/" element={<Login />} />
@@ -103,14 +97,6 @@ function App() {
           element={
             <Layout>
               <Protected Cmp={CreateGroup} />
-            </Layout>
-          }
-        />
-        <Route
-          path="/viewgroups"
-          element={
-            <Layout>
-              <Protected Cmp={ViewGroups} />
             </Layout>
           }
         />
@@ -156,6 +142,17 @@ export default function RootApp() {
   return (
     <Router>
       <App />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss={false}
+        theme="light"
+      />
     </Router>
   );
 }

@@ -7,10 +7,11 @@ import {
   mdiAccountMultiplePlusOutline,
   mdiPin,
   mdiAccountMultipleCheckOutline,
-  mdiFolderMultipleOutline,
   mdiForumOutline,
   mdiLogout,
+  mdiAccountArrowRightOutline, 
 } from "@mdi/js";
+
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
@@ -72,17 +73,18 @@ const LeftSidebar = () => {
             path="/joinedgroups"
           />
           <NavItem
-            icon={mdiFolderMultipleOutline}
-            label="View Groups"
-            path="/viewgroups"
-          />
-          <NavItem
             icon={mdiForumOutline}
             label="Public Discussion"
             path="/publicdiscussion"
           />
+          <NavItem
+            icon={mdiAccountArrowRightOutline} 
+            label="Join Group"
+            path="/joingroup"
+          />
         </nav>
       </div>
+
 
       {/* Logout */}
       <div className="mt-auto">

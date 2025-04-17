@@ -7,6 +7,8 @@ import Logo from "../../assets/ClosedLogo5.jpg";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { addUser } from "../../utils/userSlice";
+import { triggerNotification } from "../../utils/toastUtil"; 
+
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -40,44 +42,42 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     const { emailId, password } = formData;
-
+  
     if (!emailId || !password) {
-      toast.error("❌ Please enter both email and password!");
+      triggerNotification("error", "Please enter both email and password.");
       return;
     }
-
+  
     if (!isValidEmail(emailId)) {
-      toast.error("❌ Please enter a valid email address!");
+      triggerNotification("error", "Please enter a valid email address.");
       return;
     }
-
+  
     try {
       const response = await axios.post(
-        "http://localhost:7777/auth/login", // adjust to your backend URL
+        "http://localhost:7777/auth/login",
         formData,
         {
-          withCredentials: true, // ensures cookies (if any) are included in the request/response
+          withCredentials: true,
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
-
+  
       if (response.status === 200) {
-        // no need for this as for every req. sent ,thers user_auth to check the token present in the cookie
-        console.log(response);
-        toast.success("🎉 Login successful!");
-        navigate("/dashboard", { replace: true });
-
         dispatch(addUser(response.data));
+        triggerNotification("success", "Login successful.");
+        navigate("/dashboard", { replace: true });
       } else {
-        toast.error("❌ Invalid credentials. Please try again.");
+        triggerNotification("error", "Invalid credentials. Please try again.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("🚫 Something went wrong. Please try again later.");
+      triggerNotification("error", "Something went wrong. Please try again later.");
     }
   };
+  
 
   return (
     <div

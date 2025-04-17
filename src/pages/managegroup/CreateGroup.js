@@ -1,50 +1,61 @@
 import React, { useState } from 'react';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { triggerNotification } from '../../utils/toastUtil';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const CreateGroup = () => {
   const [groupName, setGroupName] = useState('');
   const [description, setDescription] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!groupName || !description) {
-      toast.error("⚠️ Both fields are required.");
+    if (!groupName.trim() || !description.trim()) {
+      triggerNotification('error', 'Both fields are required.');
       return;
     }
 
     try {
-      const response = await fetch('http://localhost:7777/groups', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`, // Include if auth is required
+      const response = await axios.post(
+        'http://localhost:7777/groups',
+        {
+          groupName,
+          description,
         },
-        body: JSON.stringify({ groupName, description }),
-      });
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        }
+      );
 
-      const data = await response.json();
+      triggerNotification('success', 'Group created successfully.');
+      setGroupName('');
+      setDescription('');
 
-      if (response.ok) {
-        toast.success('✅ Group created successfully!');
-        setGroupName('');
-        setDescription('');
-      } else {
-        toast.error(`❌ ${data.message || 'Failed to create group.'}`);
-      }
+      // Redirect to dashboard after a short delay
+      setTimeout(() => navigate('/dashboard'), 1000);
     } catch (error) {
       console.error('Error creating group:', error);
-      toast.error('🚫 Server error. Try again later.');
+      triggerNotification(
+        'error',
+        error?.response?.data?.message || 'Server error. Try again later.'
+      );
     }
   };
 
   return (
     <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-center text-green-700">Create New Group</h2>
+      <h2 className="text-2xl font-bold mb-4 text-center text-green-700">
+        Create New Group
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Group Name</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Group Name
+          </label>
           <input
             type="text"
             value={groupName}
@@ -54,7 +65,9 @@ const CreateGroup = () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -70,7 +83,6 @@ const CreateGroup = () => {
           Create Group
         </button>
       </form>
-      <ToastContainer />
     </div>
   );
 };
