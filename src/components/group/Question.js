@@ -2,7 +2,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { mdiThumbUpOutline, mdiStar, mdiStarOutline } from "@mdi/js";
+import {
+  mdiThumbUpOutline,
+  mdiStar,
+  mdiStarOutline,
+  mdiPencilOutline,
+  mdiTrashCanOutline,
+} from "@mdi/js";
 import Icon from "@mdi/react";
 import CommentSection from "./CommentSection";
 import AddAnswer from "../AddAnswer";
@@ -15,6 +21,10 @@ const Question = () => {
   const [answers, setAnswers] = useState([]);
   const [votedAnswers, setVotedAnswers] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
+
+  // Editing state for answers
+  const [editingAnswerId, setEditingAnswerId] = useState(null);
+  const [editAnswerContent, setEditAnswerContent] = useState("");
 
   // Fetch question + answers
   const fetchData = async () => {
@@ -60,12 +70,7 @@ const Question = () => {
     setAnswers((prev) =>
       prev.map((a) =>
         a._id === answerId
-          ? {
-              ...a,
-              votes: already
-                ? Math.max((a.votes || 1) - 1, 0)
-                : (a.votes || 0) + 1,
-            }
+          ? { ...a, votes: already ? Math.max((a.votes || 1) - 1, 0) : (a.votes || 0) + 1 }
           : a
       )
     );
@@ -76,9 +81,7 @@ const Question = () => {
         { withCredentials: true }
       );
       setAnswers((prev) =>
-        prev.map((a) =>
-          a._id === answerId ? { ...a, votes: data.votes } : a
-        )
+        prev.map((a) => (a._id === answerId ? { ...a, votes: data.votes } : a))
       );
       setVotedAnswers((prev) =>
         already ? prev.filter((id) => id !== answerId) : [...prev, answerId]
@@ -89,19 +92,14 @@ const Question = () => {
       setAnswers((prev) =>
         prev.map((a) =>
           a._id === answerId
-            ? {
-                ...a,
-                votes: already
-                  ? (a.votes || 0) + 1
-                  : Math.max((a.votes || 1) - 1, 0),
-              }
+            ? { ...a, votes: already ? (a.votes || 0) + 1 : Math.max((a.votes || 1) - 1, 0) }
             : a
         )
       );
     }
   };
 
-  // Toggle approval (only server will allow if moderator or author)
+  // Toggle approval (only server will allow)
   const handleApprove = async (answerId) => {
     try {
       const { data } = await axios.put(
@@ -111,9 +109,7 @@ const Question = () => {
       );
       setAnswers((prev) =>
         prev.map((a) =>
-          a._id === answerId
-            ? { ...a, approved_flag: data.answer.approved_flag }
-            : a
+          a._id === answerId ? { ...a, approved_flag: data.answer.approved_flag } : a
         )
       );
     } catch (err) {
@@ -122,6 +118,46 @@ const Question = () => {
       } else {
         console.error("Error toggling approval:", err);
       }
+    }
+  };
+
+  // Delete answer
+  const handleDeleteAnswer = async (e, answerId) => {
+    e.stopPropagation();
+    if (!window.confirm("Delete this answer?")) return;
+    try {
+      await axios.delete(
+        `http://localhost:7777/posts/${answerId}`,
+        { withCredentials: true }
+      );
+      fetchData();
+    } catch (err) {
+      const msg = err.response?.data?.error || "Error deleting answer";
+      alert(msg);
+    }
+  };
+
+  // Start editing answer
+  const handleEditAnswerClick = (e, answer) => {
+    e.stopPropagation();
+    setEditingAnswerId(answer._id);
+    setEditAnswerContent(answer.content);
+  };
+
+  // Save updated answer
+  const handleUpdateAnswer = async (e, answerId) => {
+    e.stopPropagation();
+    try {
+      await axios.put(
+        `http://localhost:7777/posts/${answerId}`,
+        { content: editAnswerContent },
+        { withCredentials: true }
+      );
+      setEditingAnswerId(null);
+      fetchData();
+    } catch (err) {
+      const msg = err.response?.data?.error || "Error updating answer";
+      alert(msg);
     }
   };
 
@@ -166,32 +202,90 @@ const Question = () => {
       )}
 
       {answers.map((answer) => {
+        // If this answer is in edit mode
+        if (editingAnswerId === answer._id) {
+          return (
+            <div
+              key={answer._id}
+              className="relative bg-white border rounded p-4 shadow mb-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <textarea
+                rows={3}
+                value={editAnswerContent}
+                onChange={(e) => setEditAnswerContent(e.target.value)}
+                className="w-full border p-2 rounded mb-2"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => handleUpdateAnswer(e, answer._id)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingAnswerId(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        // Normal view mode
         const isVoted = votedAnswers.includes(answer._id);
         return (
           <div
             key={answer._id}
-            className="relative bg-white border rounded p-4 shadow hover:shadow-md transition mb-6"
+            className="relative bg-white border rounded p-4 shadow mb-6 hover:shadow-md transition"
           >
-            {/* Star icon at top-right */}
-            <button
-              onClick={() => handleApprove(answer._id)}
-              className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded"
-            >
-              <Icon
-                path={answer.approved_flag ? mdiStar : mdiStarOutline}
-                size={0.8}
-                className={`opacity-60 ${
-                  answer.approved_flag ? "text-yellow-400" : "text-gray-300"
-                }`}
-                title={
-                  answer.approved_flag
-                    ? "Approved answer"
-                    : "Click to approve"
-                }
-              />
-            </button>
+{/* Approve star (left) */}
+<button
+  onClick={() => handleApprove(answer._id)}
+  className="absolute top-2 left-2 p-1 hover:bg-gray-100 rounded"
+  title={answer.approved_flag ? "Approved answer" : "Click to approve"}
+>
+  <Icon
+    path={answer.approved_flag ? mdiStar : mdiStarOutline}
+    size={0.8}
+    className={`opacity-60 ${
+      answer.approved_flag ? "text-yellow-400" : "text-gray-300"
+    }`}
+  />
+</button>
 
-            <p className="text-gray-800">{answer.content}</p>
+{/* Edit and Delete buttons (right side) */}
+<div className="absolute top-2 right-2 flex gap-2">
+  <button
+    onClick={(e) => handleEditAnswerClick(e, answer)}
+    className="p-1 hover:bg-gray-100 rounded"
+    title="Edit answer"
+  >
+    <Icon
+      path={mdiPencilOutline}
+      size={0.8}
+      className="text-gray-500 hover:text-blue-600"
+    />
+  </button>
+  <button
+    onClick={(e) => handleDeleteAnswer(e, answer._id)}
+    className="p-1 hover:bg-gray-100 rounded"
+    title="Delete answer"
+  >
+    <Icon
+      path={mdiTrashCanOutline}
+      size={0.8}
+      className="text-gray-400 hover:text-red-600"
+    />
+  </button>
+</div>
+<div className="mt-5"><p className="text-gray-800">{answer.content}</p></div>
+            
 
             <div className="mt-3 flex items-center gap-4">
               <button
