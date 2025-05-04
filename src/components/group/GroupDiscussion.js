@@ -8,7 +8,7 @@ const GroupDiscussion = ({ groupId }) => {
 
   const user=useSelector(store=>store.user)
   const userId=user?._id
-  groupId='67eb91ddc7bbe7dbb3ca5322'
+  
   const [newMessage,setNewMessage]=useState("")
 
   const messagesEndRef = useRef(null);

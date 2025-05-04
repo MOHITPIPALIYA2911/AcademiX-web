@@ -148,7 +148,7 @@ const GroupLayout = () => {
       case "qa":
         return <GroupQA title={"Q&A"} groupId={groupId} isPublic={false} />;
       case "discussion":
-        return <GroupDiscussion />;
+        return <GroupDiscussion groupId={groupId}/>;
       case "members":
         return <GroupMembers groupId={groupId} />;
       case "manage":

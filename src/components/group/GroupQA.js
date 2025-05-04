@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   mdiThumbUpOutline,
   mdiTrashCanOutline,
@@ -12,7 +12,7 @@ import AddQuestion from "../AddQuestion";
 
 const GroupQA = ({ title, isPublic, groupId }) => {
   const navigate = useNavigate();
-  // const { grpID } = useParams();
+  
   const user = useSelector((store) => store.user);
 
   const [questions, setQuestions] = useState([]);
